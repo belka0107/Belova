@@ -8,13 +8,15 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 
-
 class MainActivity : AppCompatActivity() {
     lateinit var viewModel: MainViewModel
     lateinit var imageView: ImageView
     lateinit var progressBar: ProgressBar
     lateinit var label: TextView
     lateinit var nextButton: ImageButton
+    lateinit var prevButton: ImageButton
+
+    var counter = Variable(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +26,8 @@ class MainActivity : AppCompatActivity() {
         label = findViewById(R.id.label)
         progressBar = findViewById(R.id.progressBar)
         nextButton = findViewById(R.id.nextButton)
+        prevButton = findViewById(R.id.prevButton)
+        prevButton.visibility = View.GONE
 
         val retrofitService = RetrofitService.getInstance()
         val mainRepository = MainRepository(retrofitService)
@@ -53,9 +57,21 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        viewModel.getJoke()
+        viewModel.getJoke(counter.value)
 
-        nextButton.setOnClickListener { viewModel.getJoke() }
+        nextButton
+            .setOnClickListener {
+                counter.value = counter.value + 1
+                viewModel.getJoke(counter.value)
+            }
+        prevButton
+            .setOnClickListener {
+                counter.value = counter.value - 1
+                viewModel.getJoke(counter.value)  }
+
+        counter
+            .observable
+            .subscribe { prevButton.visibility = if (it > 0) View.VISIBLE else View.GONE }
 
     }
 }

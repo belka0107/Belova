@@ -9,24 +9,29 @@ class MainViewModel constructor(private val mainRepository: MainRepository) : Vi
     val errorMessage = MutableLiveData<String>()
     val joke = MutableLiveData<Joke>()
     var job: Job? = null
+    val storage = hashMapOf<Int, Joke>()
     val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
         onError("Exception handled: ${throwable.localizedMessage}")
     }
     val loading = MutableLiveData<Boolean>()
 
-    fun getJoke() {
-        loading.value = true
-        job = CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
-            val response = mainRepository.getRandom()
-            withContext(Dispatchers.Main) {
-                if (response.isSuccessful) {
-                    joke.postValue(response.body())
-                    loading.value = false
-                } else {
-                    onError("Error : ${response.message()} ")
+    fun getJoke(counter: Int) {
+        if (storage[counter] != null)
+            joke.postValue(storage[counter])
+        else
+            job = CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
+                val response = mainRepository.getRandom()
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val respJoke = response.body()
+                        joke.postValue(respJoke!!)
+                        loading.value = false
+                        storage[counter] = respJoke
+                    } else {
+                        onError("Error : ${response.message()} ")
+                    }
                 }
             }
-        }
     }
 
     private fun onError(message: String) {
