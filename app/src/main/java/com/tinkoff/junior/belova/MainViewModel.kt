@@ -16,8 +16,11 @@ class MainViewModel constructor(private val mainRepository: MainRepository) : Vi
     val loading = MutableLiveData<Boolean>()
 
     fun getJoke(counter: Int) {
-        if (storage[counter] != null)
+        loading.postValue(true)
+        if (storage[counter] != null) {
+            loading.postValue(false)
             joke.postValue(storage[counter])
+        }
         else
             job = CoroutineScope(Dispatchers.IO + exceptionHandler).launch {
                 val response = mainRepository.getRandom()

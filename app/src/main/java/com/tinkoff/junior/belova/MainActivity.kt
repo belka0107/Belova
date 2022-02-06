@@ -15,6 +15,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var label: TextView
     lateinit var nextButton: ImageButton
     lateinit var prevButton: ImageButton
+    lateinit var errorLayout: LinearLayout
 
     var counter = Variable(0)
 
@@ -27,7 +28,8 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progressBar)
         nextButton = findViewById(R.id.nextButton)
         prevButton = findViewById(R.id.prevButton)
-        prevButton.visibility = View.GONE
+
+        errorLayout = findViewById(R.id.errorLayout)
 
         val retrofitService = RetrofitService.getInstance()
         val mainRepository = MainRepository(retrofitService)
@@ -36,6 +38,7 @@ class MainActivity : AppCompatActivity() {
             ViewModelProvider(this, ViewModelFactory(mainRepository)).get(MainViewModel::class.java)
 
         viewModel.joke.observe(this) {
+            imageView.visibility = View.VISIBLE
             Glide
                 .with(this)
                 .load(it.gifURL)
@@ -46,15 +49,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel.errorMessage.observe(this) {
-            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            errorLayout.visibility = View.VISIBLE
         }
 
         viewModel.loading.observe(this, Observer {
-            if (it) {
-                progressBar.visibility = View.VISIBLE
-            } else {
-                progressBar.visibility = View.GONE
-            }
+            imageView.visibility = if (!it) View.VISIBLE else View.GONE
+            progressBar.visibility = if (it) View.VISIBLE else View.GONE
         })
 
         viewModel.getJoke(counter.value)
@@ -67,11 +67,16 @@ class MainActivity : AppCompatActivity() {
         prevButton
             .setOnClickListener {
                 counter.value = counter.value - 1
-                viewModel.getJoke(counter.value)  }
+                viewModel.getJoke(counter.value)
+            }
 
         counter
             .observable
             .subscribe { prevButton.visibility = if (it > 0) View.VISIBLE else View.GONE }
 
+        findViewById<TextView>(R.id.repeat).setOnClickListener {
+            viewModel.getJoke(counter.value)
+            errorLayout.visibility = View.GONE
+        }
     }
 }

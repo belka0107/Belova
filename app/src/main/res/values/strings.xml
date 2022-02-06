@@ -8,4 +8,6 @@
     <string name="previous">Previous</string>
 
     <string name="heading"><b>Developers Life</b></string>
+    <string name="repeat">Try more</string>
+    <string name="error">Connection error. Try one more time</string>
 </resources>
